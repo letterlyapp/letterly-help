@@ -5,7 +5,7 @@
  *   node scripts/convert.mjs --only set-up-dictation,tags     convert some articles
  *   node scripts/convert.mjs --all                            convert every article
  *   node scripts/convert.mjs --faq                            (re)write the home FAQ (src/data/faq/*.md)
- *   node scripts/convert.mjs --list                           list all articles with their slugs
+ *   node scripts/convert.mjs --list                           list all articles with their slugs (--json: as JSON)
  *
  * Options: --src <path to v7 html> (default ../design/help_center_v7.html)
  *          --update  for files that already exist: rewrite the text from the prototype and refresh
@@ -453,6 +453,10 @@ const data = loadData(SRC);
 const arts = index(data);
 checkAgainstConfig(arts);
 
+if (flag('--list') && flag('--json')) { // used by scripts/fidelity-check.py
+  console.log(JSON.stringify(arts.map((a) => ({ title: a.title, slug: a.slug, plats: data.C[a.title]?.plat ? Object.keys(data.C[a.title].plat) : null })), null, 1));
+  process.exit(0);
+}
 if (flag('--list')) {
   for (const a of arts) console.log(`${a.slug.padEnd(48)} ${a.category}/${a.group || '-'}${a.hidden ? '  (hidden)' : ''}  ${data.C[a.title] ? '' : '[no text in prototype]'}`);
   process.exit(0);
