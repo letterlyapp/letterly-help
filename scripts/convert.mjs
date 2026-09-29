@@ -301,7 +301,8 @@ function firstParagraphText(...htmls) {
 }
 function makeDescription(text, title) {
   if (!text) return title;
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [text];
+  // split only where a space follows the full stop, so an email like hi@letterly.app stays whole
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
   let d = '';
   for (const s of sentences) {
     const next = (d ? d + ' ' : '') + s.trim();
