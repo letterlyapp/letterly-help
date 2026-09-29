@@ -1,0 +1,14 @@
+---
+/**
+ * Coloured box inside an article.
+ *   <Callout type="tip">…</Callout>   tip (default) · note · warn · safe
+ *   <Callout type="note" title="Good to know">…</Callout>
+ */
+interface Props { type?: 'tip' | 'note' | 'warn' | 'safe'; title?: string }
+const TYPES = ['tip', 'note', 'warn', 'safe'];
+const { type = 'tip', title } = Astro.props;
+if (!TYPES.includes(type)) {
+  throw new Error(`<Callout type="${type}"> — type must be one of: ${TYPES.join(', ')}`);
+}
+---
+<div class:list={['callout', type !== 'tip' && type]}>{title && <b class="t">{title}</b>}<slot /></div>

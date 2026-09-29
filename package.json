@@ -1,0 +1,32 @@
+{
+  "name": "letterly-help",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Letterly Help Center — https://help.letterly.app",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist && node scripts/check-links.mjs",
+    "preview": "astro preview",
+    "check": "astro check && npm run build",
+    "convert": "node scripts/convert.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "^0.4.2",
+    "@astrojs/mdx": "^8.0.2",
+    "@fontsource/onest": "^5.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.5",
+    "pagefind": "^1.5.2",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^22.19.0",
+    "node-html-parser": "^9.0.4",
+    "typescript": "^6.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+---
+<section class="helpful" aria-labelledby="hf-t" data-email={site.email}>
+  <h2 id="hf-t">Was this helpful?</h2>
+  <div class="btns">
+    <button type="button" class="hbtn" data-v="yes"><Icon name="up" />Yes</button>
+    <button type="button" class="hbtn" data-v="no"><Icon name="down" />No</button>
+  </div>
+  <template id="hf-yes"><p class="thanks" role="status" tabindex="-1"><Icon name="check" /><span>Thanks!</span></p></template>
+  <template id="hf-no"><p class="thanks sorry" role="status" tabindex="-1"><Icon name="mail" /><span>Sorry about that. Email us at <a href={`mailto:${site.email}`}>{site.email}</a></span></p></template>
+</section>

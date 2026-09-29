@@ -1,0 +1,7 @@
+---
+import Icon from './Icon.astro';
+import type { Category } from '../data/categories';
+interface Props { category: Category }
+const { category } = Astro.props;
+---
+<span class="cat-ic" style={`--cbg:${category.color.bg};--cfg:${category.color.fg}`}><Icon name={category.icon} /></span>

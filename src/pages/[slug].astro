@@ -1,0 +1,50 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import WorksOn from '../components/WorksOn.astro';
+import Related from '../components/Related.astro';
+import Helpful from '../components/Helpful.astro';
+import { mdxComponents } from '../components/mdx';
+import { getArticles, categoryUrl, worksOn, type Article } from '../lib/articles';
+import { getCategory } from '../data/categories';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((article) => ({ params: { slug: article.id }, props: { article } }));
+}
+
+interface Props { article: Article }
+const { article } = Astro.props;
+const { data } = article;
+const { Content } = await render(article);
+const cat = getCategory(data.category)!;
+const group = cat.groups.find((g) => g.slug === data.group);
+const all = await getArticles();
+const related = data.related.map((id) => all.find((a) => a.id === id)).filter((a): a is Article => !!a);
+const hasTabs = /<PlatformTabs[\s>]/.test(article.body ?? '');
+const works = hasTabs ? null : worksOn(data.platforms);
+const crumbs = [
+  { label: 'Help center', href: '/' },
+  { label: cat.title, href: categoryUrl(cat.slug) },
+  ...(group ? [{ label: group.title, href: categoryUrl(cat.slug, group.slug) }] : []),
+];
+const crumbMeta = [cat.title, group?.title].filter(Boolean).join(' › ');
+---
+<Base title={data.title} description={data.description} category={cat.slug} active={article.id} noindex={data.draft}>
+  <article data-pagefind-body>
+    <Breadcrumbs items={crumbs} />
+    {data.draft && <span class="draft-badge" data-pagefind-ignore>Draft — not published</span>}
+    <span hidden data-pagefind-meta={`crumb:${crumbMeta}`}></span>
+    {data.aliases.length > 0 && (
+      <span hidden data-pagefind-weight="5" data-pagefind-index-attrs="data-aliases" data-aliases={data.aliases.join(', ')}></span>
+    )}
+    <h1 tabindex="-1">{data.title}</h1>
+    {works && <WorksOn labels={works} />}
+    <div class="body" id="body">
+      <Content components={mdxComponents} />
+    </div>
+    <Related articles={related} />
+  </article>
+  <Helpful />
+</Base>

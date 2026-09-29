@@ -1,0 +1,26 @@
+---
+/**
+ * Picture with an optional caption.
+ *   <Figure src="/images/blog/how-to-use-letterly-keyboard-1.webp" alt="The Dictation banner" caption="The Dictation banner" />
+ * Files live in public/images/. alt is required (it is read aloud to blind readers).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+interface Props { src: string; alt: string; caption?: string }
+const { src, alt, caption } = Astro.props;
+if (!src) throw new Error('<Figure> needs src="/images/…"');
+if (alt === undefined || alt === null) throw new Error(`<Figure src="${src}"> needs alt="…" (a short description of the picture)`);
+const local = src.startsWith('/');
+const exists = !local || fs.existsSync(path.join(process.cwd(), 'public', decodeURI(src)));
+const pending = !exists && src.startsWith('/images/help-center/');
+if (!exists && !pending) throw new Error(`<Figure src="${src}"> — file not found: public${src}`);
+if (pending) console.warn(`[media] waiting for file public${src} (left out of the page until it is added)`);
+---
+{exists ? (
+  <figure class="fig">
+    <img src={src} alt={alt} loading="lazy" decoding="async" />
+    {caption && <figcaption>{caption}</figcaption>}
+  </figure>
+) : import.meta.env.DEV ? (
+  <div class="missing-media">Missing image: public{src}</div>
+) : null}

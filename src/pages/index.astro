@@ -1,0 +1,60 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SearchBox from '../components/SearchBox.astro';
+import CategoryIcon from '../components/CategoryIcon.astro';
+import Icon from '../components/Icon.astro';
+import { getArticles, getNav, articleUrl, categoryUrl } from '../lib/articles';
+import { popular, site } from '../data/site';
+
+const nav = await getNav();
+const ids = new Set((await getArticles()).map((a) => a.id));
+const chips = popular.filter((c) => {
+  if (ids.has(c.article)) return true;
+  console.warn(`[home] popular chip "${c.label}" skipped: no article "${c.article}" yet`);
+  return false;
+});
+const faqEntries = (await getCollection('faq')).sort((a, b) => a.data.order - b.data.order);
+const faq = await Promise.all(faqEntries.map(async (e) => ({ q: e.data.question, id: e.id, Content: (await render(e)).Content })));
+---
+<Base home>
+  <section class="hero">
+    <div class="hero-inner">
+      <h1 tabindex="-1">How can we <span class="grad">help</span>?</h1>
+      <p>Answers, guides and troubleshooting — all in one place.</p>
+      <SearchBox variant="hero" />
+      {chips.length > 0 && (
+        <ul class="hero-chips" aria-label="Popular topics">
+          {chips.map((c) => <li><a href={articleUrl(c.article)}>{c.label}</a></li>)}
+        </ul>
+      )}
+    </div>
+  </section>
+
+  <section class="cats-wrap" aria-labelledby="topics-h">
+    <h2 class="sr" id="topics-h">Topics</h2>
+    <ul class="cats-grid">
+      {nav.map((c) => (
+        <li><a class="hcard" href={categoryUrl(c.slug)}><CategoryIcon category={c} /><div><h3>{c.title}</h3><p>{c.description}</p></div></a></li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="faq-wrap" aria-labelledby="faq-h">
+    <h2 id="faq-h">Frequently asked questions</h2>
+    {faq.map(({ q, id, Content }) => (
+      <div class="faq-item">
+        <h3><button type="button" class="faq-q" aria-expanded="false" aria-controls={`faq-${id}`}><span>{q}</span><Icon name="chevD" /></button></h3>
+        <div class="faq-a" id={`faq-${id}`} hidden><Content /></div>
+      </div>
+    ))}
+  </section>
+
+  <section class="home-contact" aria-labelledby="contact-h">
+    <div class="home-contact-inner">
+      <h2 id="contact-h">Still need help?</h2>
+      <p>We read every email and get back to you as soon as we can.</p>
+      <a href={`mailto:${site.email}`}><Icon name="mail" />{site.email}</a>
+    </div>
+  </section>
+</Base>

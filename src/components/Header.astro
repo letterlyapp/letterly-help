@@ -1,0 +1,18 @@
+---
+import Icon from './Icon.astro';
+import SearchBox from './SearchBox.astro';
+import { site } from '../data/site';
+---
+<header class="top" id="top">
+  <div class="top-in">
+    <a href="/" class="logo" aria-label="Letterly Help Center home">
+      <img class="logo-img" src="/images/logo/logo-dark.webp" alt="Letterly" width="103" height="32" />
+      <span class="logo-help" aria-hidden="true">Help</span>
+    </a>
+    <SearchBox variant="top" />
+    <button type="button" class="icon-btn msearch-close" id="searchClose" aria-label="Close search"><Icon name="x" /></button>
+    <a class="cta" href={site.appUrl} target="_blank" rel="noopener">Open Letterly<span class="sr"> (opens in a new tab)</span></a>
+    <button type="button" class="icon-btn search-btn" id="searchBtn" aria-label="Search"><Icon name="search" /></button>
+    <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="side"><Icon name="menu" /></button>
+  </div>
+</header>

@@ -1,0 +1,10 @@
+---
+/**
+ * "Learn more →" link at the end of a Callout.
+ *   <MoreLink href="/what-plans-are-there/">Learn more about plans →</MoreLink>
+ */
+interface Props { href: string }
+const { href } = Astro.props;
+if (!href) throw new Error('<MoreLink> needs href="/article-name/"');
+---
+<a class="more" href={href}><slot /></a>

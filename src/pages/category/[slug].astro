@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CategoryIcon from '../../components/CategoryIcon.astro';
+import Icon from '../../components/Icon.astro';
+import { getNav, articleUrl, type NavCategory } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const nav = await getNav();
+  return nav.map((category) => ({ params: { slug: category.slug }, props: { category } }));
+}
+interface Props { category: NavCategory }
+const { category: cat } = Astro.props;
+---
+<Base title={cat.title} description={`${cat.title}: ${cat.description}.`} category={cat.slug}>
+  <Breadcrumbs items={[{ label: 'Help center', href: '/' }]} />
+  <div class="cat-top"><CategoryIcon category={cat} /><h1 tabindex="-1">{cat.title}</h1></div>
+  <p class="lead">{cat.description}</p>
+  {cat.count === 0 && <p class="empty-cat">Articles for this topic are on their way.</p>}
+  {cat.flat.length > 0 && (
+    <div class="cgroup">
+      <ul class="alist">
+        {cat.flat.map((a) => <li><a href={articleUrl(a.id)}><span>{a.data.title}</span><Icon name="chevR" /></a></li>)}
+      </ul>
+    </div>
+  )}
+  {cat.navGroups.map((g) => (
+    <section class="cgroup" id={`grp-${g.slug}`} aria-labelledby={`grp-h-${g.slug}`}>
+      <h2 id={`grp-h-${g.slug}`}>{g.title}</h2>
+      <ul class="alist">
+        {g.articles.map((a) => <li><a href={articleUrl(a.id)}><span>{a.data.title}</span><Icon name="chevR" /></a></li>)}
+      </ul>
+    </section>
+  ))}
+</Base>

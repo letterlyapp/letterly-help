@@ -1,0 +1,12 @@
+---
+import type { Article } from '../lib/articles';
+import { articleUrl } from '../lib/articles';
+interface Props { articles: Article[] }
+const { articles } = Astro.props;
+---
+{articles.length > 0 && (
+  <nav class="rel" aria-labelledby="rel-t" data-pagefind-ignore>
+    <h2 class="rel-t" id="rel-t">Related articles</h2>
+    <ul>{articles.map((a) => <li><a href={articleUrl(a.id)}>{a.data.title}</a></li>)}</ul>
+  </nav>
+)}

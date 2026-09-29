@@ -1,0 +1,10 @@
+---
+/**
+ * Block that opens on click.
+ *   <Details summary="See all languages">…</Details>
+ */
+interface Props { summary: string }
+const { summary } = Astro.props;
+if (!summary) throw new Error('<Details> needs summary="…" (the text on the button)');
+---
+<details class="more"><summary>{summary}</summary><div class="details-body"><slot /></div></details>

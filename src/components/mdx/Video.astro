@@ -1,0 +1,25 @@
+---
+/**
+ * Video with controls. It never plays by itself.
+ *   <Video src="/video/letterly-windows-floating-bar.mp4" caption="The floating bar on Windows" />
+ * Files live in public/video/ (or public/images/help-center/ for Dasha's files).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+interface Props { src: string; caption?: string; title?: string }
+const { src, caption, title } = Astro.props;
+if (!src) throw new Error('<Video> needs src="/video/…"');
+const local = src.startsWith('/');
+const exists = !local || fs.existsSync(path.join(process.cwd(), 'public', decodeURI(src)));
+const pending = !exists && src.startsWith('/images/help-center/');
+if (!exists && !pending) throw new Error(`<Video src="${src}"> — file not found: public${src}`);
+if (pending) console.warn(`[media] waiting for file public${src} (left out of the page until it is added)`);
+---
+{exists ? (
+  <figure class="fig">
+    <video src={`${src}#t=0.1`} controls preload="metadata" playsinline aria-label={title ?? caption}></video>
+    {caption && <figcaption>{caption}</figcaption>}
+  </figure>
+) : import.meta.env.DEV ? (
+  <div class="missing-media">Missing video: public{src}</div>
+) : null}

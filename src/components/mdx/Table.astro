@@ -1,0 +1,5 @@
+---
+/** Every Markdown table is wrapped in a scrollable box, so wide tables never widen the page on phones. */
+const props = Astro.props;
+---
+<div class="tbl-wrap" tabindex="0" role="region" aria-label="Table"><table class="tbl" {...props}><slot /></table></div>

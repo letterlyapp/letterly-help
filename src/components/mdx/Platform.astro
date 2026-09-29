@@ -1,0 +1,12 @@
+---
+/**
+ * One tab of <PlatformTabs>. name: iphone · android · mac · windows · web
+ */
+import { isPlatform, PLATFORMS } from '../../lib/platforms';
+interface Props { name: string }
+const { name } = Astro.props;
+if (!isPlatform(name)) {
+  throw new Error(`<Platform name="${name}"> — name must be one of: ${PLATFORMS.join(', ')}`);
+}
+---
+<div class="ppanel" role="tabpanel" data-platform={name}><slot /></div>

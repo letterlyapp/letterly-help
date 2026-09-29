@@ -1,0 +1,80 @@
+---
+import '@fontsource/onest/400.css';
+import '@fontsource/onest/500.css';
+import '@fontsource/onest/600.css';
+import '@fontsource/onest/700.css';
+import '@fontsource/onest/800.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import { site } from '../data/site';
+
+interface Props {
+  /** page title without the site name; empty on the home page */
+  title?: string;
+  description?: string;
+  home?: boolean;
+  /** current category slug (for the menu) */
+  category?: string;
+  /** current article id (highlighted in the menu) */
+  active?: string;
+  noindex?: boolean;
+}
+const { title, description = site.description, home = false, category, active, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {noindex && <meta name="robots" content="noindex" />}
+  <meta property="og:type" content={home ? 'website' : 'article'} />
+  <meta property="og:site_name" content={site.name} />
+  <meta property="og:title" content={title ?? site.name} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta name="theme-color" content="#FCF4F7" />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <script is:inline>
+    /* Platform tabs: pick the reader's platform before the page is painted (saved choice, else detected OS). */
+    window.__lhPlat = function (el) {
+      var keys = [].map.call(el.querySelectorAll('[role=tab]'), function (b) { return b.getAttribute('data-platform'); });
+      var pick = null;
+      try { pick = localStorage.getItem('lh-platform'); } catch (e) {}
+      if (!pick || keys.indexOf(pick) < 0) {
+        var ua = navigator.userAgent || '';
+        var os = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iphone'
+          : /Android/.test(ua) ? 'android' : /Macintosh|Mac OS X/.test(ua) ? 'mac' : /Windows/.test(ua) ? 'windows' : 'web';
+        pick = keys.indexOf(os) > -1 ? os : keys[0];
+      }
+      el.querySelectorAll('[role=tab]').forEach(function (b) {
+        var on = b.getAttribute('data-platform') === pick;
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+      });
+      el.querySelectorAll('[role=tabpanel]').forEach(function (p) { p.hidden = p.getAttribute('data-platform') !== pick; });
+    };
+  </script>
+</head>
+<body class:list={[{ 'home-mode': home }]}>
+  <a class="skip" href="#main">Skip to content</a>
+  <Header />
+  <div class="layout">
+    <Sidebar category={category} active={active} />
+    <main class="main" id="main">
+      <slot />
+    </main>
+    <aside class="toc" id="toc" data-pagefind-ignore></aside>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <script>
+    import '../scripts/site';
+  </script>
+</body>
+</html>

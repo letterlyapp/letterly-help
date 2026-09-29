@@ -1,0 +1,29 @@
+---
+/**
+ * Search field with a results dropdown (Pagefind). Two variants:
+ * "top" — in the header, "hero" — the big field on the home page.
+ */
+import Icon from './Icon.astro';
+interface Props { variant: 'top' | 'hero' }
+const { variant } = Astro.props;
+const placeholder = variant === 'hero' ? 'Search for anything…' : 'Search the help center…';
+---
+<div class={variant === 'hero' ? 'hero-search js-search' : 'top-search js-search'} role="search">
+  <div class="sbox">
+    <Icon name="search" />
+    <input
+      type="search"
+      id={variant === 'top' ? 'search' : undefined}
+      placeholder={placeholder}
+      aria-label="Search the help center"
+      autocomplete="off"
+      enterkeyhint="search"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-expanded="false"
+      aria-controls={`sres-${variant}`}
+    />
+    <button type="button" class="sclear" aria-label="Clear search"><Icon name="x" /></button>
+  </div>
+  <div class="sres" id={`sres-${variant}`} role="listbox" aria-label="Search results"></div>
+</div>

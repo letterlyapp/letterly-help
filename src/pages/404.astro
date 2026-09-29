@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+---
+<Base title="Page not found" noindex>
+  <Breadcrumbs items={[{ label: 'Help center', href: '/' }]} />
+  <div class="nf">
+    <h1 tabindex="-1">Page not found</h1>
+    <p><a href="/">Go to the Help Center home</a></p>
+  </div>
+</Base>

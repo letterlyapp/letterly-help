@@ -1,0 +1,56 @@
+---
+/**
+ * Tabs "iPhone / Android / Mac / Windows / Web" — only when the text is really different per platform.
+ *   <PlatformTabs>
+ *   <Platform name="iphone">
+ *   …text for iPhone…
+ *   </Platform>
+ *   <Platform name="mac">
+ *   …text for Mac…
+ *   </Platform>
+ *   </PlatformTabs>
+ * The reader's platform is chosen automatically and remembered.
+ */
+import { PLATFORM_LABELS, PLATFORMS, type PlatformKey } from '../../lib/platforms';
+
+let html = await Astro.slots.render('default');
+// (in `npm run dev` Astro adds extra data-astro-* attributes, hence the ([^>]*))
+const marker = /<div class="ppanel" role="tabpanel" data-platform="([a-z]+)"([^>]*)>/g;
+const keys = [...html.matchAll(marker)].map((m) => m[1] as PlatformKey);
+if (keys.length < 2) {
+  throw new Error('<PlatformTabs> needs at least two <Platform name="…"> blocks inside');
+}
+if (new Set(keys).size !== keys.length) {
+  throw new Error(`<PlatformTabs> has the same platform twice: ${keys.join(', ')}`);
+}
+const ordered = [...keys].sort((a, b) => PLATFORMS.indexOf(a) - PLATFORMS.indexOf(b));
+if (ordered.join() !== keys.join()) {
+  throw new Error(`<PlatformTabs>: put the platforms in this order: ${ordered.join(', ')}`);
+}
+const g = globalThis as { __lhTabsSeq?: number };
+g.__lhTabsSeq = (g.__lhTabsSeq ?? 0) + 1;
+const uid = 'pt' + g.__lhTabsSeq;
+let n = 0;
+html = html.replace(marker, (_m, k, rest) => {
+  const first = n++ === 0;
+  return `<div class="ppanel" role="tabpanel" data-platform="${k}" id="${uid}-panel-${k}" aria-labelledby="${uid}-tab-${k}"${first ? '' : ' hidden'}${rest}>`;
+});
+---
+<div class="ptabs-wrap" data-ptabs>
+  <div class="ptabs" role="tablist" aria-label="Choose your device" data-pagefind-ignore>
+    {keys.map((k, i) => (
+      <button
+        type="button"
+        class="ptab"
+        role="tab"
+        id={`${uid}-tab-${k}`}
+        aria-controls={`${uid}-panel-${k}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        data-platform={k}
+      >{PLATFORM_LABELS[k]}</button>
+    ))}
+  </div>
+  <Fragment set:html={html} />
+  <script is:inline>window.__lhPlat && __lhPlat(document.currentScript.parentElement);</script>
+</div>

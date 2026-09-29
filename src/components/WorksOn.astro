@@ -1,0 +1,9 @@
+---
+import Icon from './Icon.astro';
+interface Props { labels: string[] }
+const { labels } = Astro.props;
+const last = labels.length - 1;
+---
+<p class="works" data-pagefind-ignore><Icon name="devices" /><span>Works on: {labels.map((p, i) => (
+  <Fragment><b>{p}{i < last && <span class="dot"> ·</span>}</b>{i < last && ' '}</Fragment>
+))}</span></p>

@@ -1,0 +1,58 @@
+---
+/**
+ * Left menu (on phones: the drawer). Shows the current category with its groups;
+ * the group of the open article is expanded and the article is highlighted.
+ */
+import Icon from './Icon.astro';
+import CategoryIcon from './CategoryIcon.astro';
+import { getNav, articleUrl, categoryUrl } from '../lib/articles';
+
+interface Props { category?: string; active?: string }
+const { category, active } = Astro.props;
+const nav = await getNav();
+const cat = nav.find((c) => c.slug === category);
+const others = nav.filter((c) => c !== cat);
+---
+<nav class="side" id="side" aria-label="Help topics">
+  <div class="drawer-head"><span>Menu</span><button class="icon-btn" id="drawerClose" type="button" aria-label="Close menu"><Icon name="x" /></button></div>
+  {cat ? (
+    <>
+      <a class="cat-h" href={categoryUrl(cat.slug)}><CategoryIcon category={cat} /><span>{cat.title}</span></a>
+      {cat.flat.length > 0 && (
+        <ul class="flat-l">
+          {cat.flat.map((a) => (
+            <li><a class="art" href={articleUrl(a.id)} aria-current={a.id === active ? 'page' : undefined}>{a.data.title}</a></li>
+          ))}
+        </ul>
+      )}
+      {cat.navGroups.map((g) => {
+        const open = g.articles.some((a) => a.id === active);
+        const id = `g-${cat.slug}-${g.slug}`;
+        return (
+          <div class="grp">
+            <button type="button" class="grp-b" aria-expanded={open ? 'true' : 'false'} aria-controls={id} data-key={`${cat.slug}/${g.slug}`}>
+              <span>{g.title}</span><Icon name="chevR" />
+            </button>
+            <ul class="grp-l" id={id} hidden={!open}>
+              {g.articles.map((a) => (
+                <li><a class="art" href={articleUrl(a.id)} aria-current={a.id === active ? 'page' : undefined}>{a.data.title}</a></li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+      <div class="others">
+        <p class="others-t">Other topics</p>
+        <ul>
+          {others.map((c) => (<li><a href={categoryUrl(c.slug)}><CategoryIcon category={c} /><span>{c.title}</span></a></li>))}
+        </ul>
+      </div>
+    </>
+  ) : (
+    <div class="others" style="margin-top:8px;border-top:0;padding-top:0">
+      <ul>
+        {nav.map((c) => (<li><a href={categoryUrl(c.slug)}><CategoryIcon category={c} /><span>{c.title}</span></a></li>))}
+      </ul>
+    </div>
+  )}
+</nav>
