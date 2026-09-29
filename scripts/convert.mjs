@@ -89,7 +89,7 @@ function escText(s) {
   return s.replace(/\\/g, '\\\\').replace(/([*_`[\]{}<>])/g, '\\$1');
 }
 function escLineStart(s) {
-  return s.replace(/^(\s*)([#>+-]|\d+[.)])(\s)/, (m, sp, mark, after) => `${sp}${mark.replace(/([#>+.)-])/, '\\$1')}${after}`);
+  return s.replace(/^(\s*)([#>+-]|\d+[.)])(\s)/, (_m, sp, mark, after) => `${sp}${mark.replace(/([#>+.)-])/, '\\$1')}${after}`);
 }
 
 class Ctx {
