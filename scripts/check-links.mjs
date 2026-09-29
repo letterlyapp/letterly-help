@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 /**
  * After the build: checks that every internal link and picture in dist/ points to something that exists.
- *   node scripts/check-links.mjs            report broken links (build does not fail)
- *   node scripts/check-links.mjs --strict   fail the build when something is broken
- * While articles are still being moved from the prototype, some links point to articles
- * that don't exist yet — so the default is "report only". Switch to --strict once all are moved.
+ *   node scripts/check-links.mjs --strict   fail when something is broken (this is what `npm run build` runs)
+ *   node scripts/check-links.mjs            only report broken links
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -52,7 +50,7 @@ if (!broken.size) { console.log('All internal links and files are OK.'); process
 const articles = [...broken.keys()].filter((u) => /^\/[a-z0-9-]+\/$/.test(u));
 const other = [...broken.keys()].filter((u) => !articles.includes(u));
 if (articles.length) {
-  console.log(`\nLinks to articles that don't exist yet (${articles.length}):`);
+  console.log(`\nLinks to articles that don't exist (${articles.length}):`);
   for (const u of articles.sort()) console.log(`  ${u}  ← ${[...broken.get(u)].join(', ')}`);
 }
 if (other.length) {

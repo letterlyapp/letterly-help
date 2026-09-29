@@ -9,11 +9,11 @@ import { popular, site } from '../data/site';
 
 const nav = await getNav();
 const ids = new Set((await getArticles()).map((a) => a.id));
-const chips = popular.filter((c) => {
-  if (ids.has(c.article)) return true;
-  console.warn(`[home] popular chip "${c.label}" skipped: no article "${c.article}" yet`);
-  return false;
-});
+const missing = popular.filter((c) => !ids.has(c.article));
+if (missing.length) {
+  throw new Error(`src/data/site.ts: popular topic ${missing.map((c) => `"${c.label}" → "${c.article}"`).join(', ')} — there is no such article (file name without .mdx in src/content/articles/)`);
+}
+const chips = popular;
 const faqEntries = (await getCollection('faq')).sort((a, b) => a.data.order - b.data.order);
 const faq = await Promise.all(faqEntries.map(async (e) => ({ q: e.data.question, id: e.id, Content: (await render(e)).Content })));
 ---

@@ -9,7 +9,7 @@ export const site = {
 /**
  * "Popular topics" chips under the search on the home page.
  * `article` is the article's file name without .mdx.
- * A chip whose article does not exist yet is skipped (with a warning in the build log).
+ * If an article here does not exist, the build stops with a message.
  */
 export const popular: { label: string; article: string }[] = [
   { label: 'Getting started', article: 'what-is-letterly' },
