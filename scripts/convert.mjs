@@ -8,12 +8,19 @@
  *   node scripts/convert.mjs --list                           list all articles with their slugs
  *
  * Options: --src <path to v7 html> (default ../design/help_center_v7.html)
- *          --force   overwrite files that already exist
+ *          --update  for files that already exist: rewrite the text from the prototype and refresh
+ *                    `related`, but KEEP everything else in the block between the --- lines
+ *                    (description, aliases, hidden, draft, order… — anything edited by hand).
+ *                    `updated:` changes only when the text really changed.
+ *          --force   overwrite files that already exist completely (hand edits are lost)
  *          --date 2026-09-29   value for `updated:` (default: today)
  *
  * The English text is copied exactly. Only presentation changes:
  *   - "Update Letterly to the latest version…" warnings become type="note";
- *   - placeholder screenshots with Russian captions (figure.shot) are dropped;
+ *   - placeholder screenshots (figure.shot) become <Shot label="…" /> — shown only in `npm run dev`,
+ *     never on the live site; Russian captions are dropped (<Shot />);
+ *   - the carousel becomes <Carousel> with <Figure> inside; "Part 1" labels above headings → <Eyebrow>;
+ *   - platform tabs keep the order of the prototype;
  *   - related articles that don't exist yet are left out (listed in the report);
  *   - images: ../assets/letterly-images/… → /images/…, help-center-images/… → /images/help-center/…
  */
@@ -33,6 +40,7 @@ const OUT = path.join(ROOT, 'src/content/articles');
 const FAQ_OUT = path.join(ROOT, 'src/data/faq');
 const DATE = opt('--date') || new Date().toISOString().slice(0, 10);
 const FORCE = flag('--force');
+const UPDATE = flag('--update');
 
 const PLAT_KEYS = { iPhone: 'iphone', Android: 'android', Mac: 'mac', Windows: 'windows', Web: 'web' };
 const PLAT_ORDER = ['iphone', 'android', 'mac', 'windows', 'web'];
@@ -182,8 +190,18 @@ function table(n, ctx) {
   return lines.join('\n');
 }
 
+const hasCyrillic = (s) => /[А-Яа-яЁё]/.test(s);
+function shot(n, ctx) {
+  const label = decode(n.text).replace(/\s+/g, ' ').trim();
+  if (!label || hasCyrillic(label)) {
+    ctx.warn(`placeholder screenshot: Russian caption dropped ("${label}") → <Shot />`);
+    return '<Shot />';
+  }
+  ctx.warn(`placeholder screenshot kept as <Shot> (not shown on the live site): "${label}"`);
+  return `<Shot label=${attr(label)} />`;
+}
 function figure(n, ctx) {
-  if (cls(n).includes('shot')) { ctx.warn(`placeholder screenshot dropped: "${decode(n.text).trim()}"`); return ''; }
+  if (cls(n).includes('shot')) return shot(n, ctx);
   const img = n.querySelector('img');
   const video = n.querySelector('video');
   const capEl = n.querySelector('figcaption');
@@ -226,9 +244,11 @@ function block(n, ctx) {
   switch (t) {
     case 'p': { const s = inline(n.childNodes, ctx).replace(/\s+/g, ' ').trim(); return s ? escLineStart(s) : ''; }
     case 'h1': case 'h2': case 'h3': case 'h4': {
-      if (n.querySelector('.eyebrow')) ctx.warn(`heading with an eyebrow label ("${decode(n.querySelector('.eyebrow').text)}") — label dropped, add it back by hand if needed`);
-      const kids = n.childNodes.filter((k) => !(isEl(k) && cls(k).includes('eyebrow')));
-      return '#'.repeat(Math.max(2, Number(t[1]))) + ' ' + inline(kids, ctx).replace(/\s+/g, ' ').trim();
+      const eb = n.childNodes.find((k) => isEl(k) && cls(k).includes('eyebrow'));
+      const kids = n.childNodes.filter((k) => k !== eb);
+      const h = '#'.repeat(Math.max(2, Number(t[1]))) + ' ' + inline(kids, ctx).replace(/\s+/g, ' ').trim();
+      if (!eb) return h;
+      return `<Eyebrow>${inline(eb.childNodes, ctx).replace(/\s+/g, ' ').trim()}</Eyebrow>\n\n${h}`;
     }
     case 'ul': return list(n, ctx, false);
     case 'ol': return c.includes('steps') ? `<Steps>\n\n${list(n, ctx, true)}\n\n</Steps>` : list(n, ctx, true);
@@ -250,10 +270,10 @@ function block(n, ctx) {
         n.querySelectorAll('a[data-art]').forEach((a) => ctx.related.push(slugify(a.getAttribute('data-art'))));
         return '';
       }
-      if (c.includes('shots')) { ctx.warn('placeholder screenshots dropped'); return ''; }
+      if (c.includes('shots')) return n.querySelectorAll('figure').map((f) => shot(f, ctx)).join('\n\n');
       if (c.includes('car')) {
-        ctx.warn('carousel flattened into separate pictures (no Carousel component yet)');
-        return n.querySelectorAll('figure').map((f) => figure(f, ctx)).filter(Boolean).join('\n\n');
+        const figs = n.querySelectorAll('figure').map((f) => figure(f, ctx)).filter(Boolean);
+        return `<Carousel>\n\n${figs.join('\n\n')}\n\n</Carousel>`;
       }
       return blocks(n.childNodes, ctx);
     }
@@ -268,10 +288,16 @@ function htmlToMdx(html, ctx) {
   return blocks(root.childNodes, ctx);
 }
 
-function firstParagraphText(html) {
-  const root = parse(html);
-  const p = root.querySelector('p');
-  return p ? decode(p.text).replace(/\s+/g, ' ').trim() : '';
+/** Text for the description: the first paragraph (of any tab), else the first list item. */
+function firstParagraphText(...htmls) {
+  for (const sel of ['p', 'li']) {
+    for (const html of htmls) {
+      const root = parse(html || '');
+      const p = root.querySelectorAll(sel).find((x) => !x.closest('.callout') && !x.closest('.rel') && decode(x.text).trim().length >= 20);
+      if (p) return decode(p.text).replace(/\s+/g, ' ').trim();
+    }
+  }
+  return '';
 }
 function makeDescription(text, title) {
   if (!text) return title;
@@ -284,7 +310,7 @@ function makeDescription(text, title) {
     if (d.length >= 60) break;
   }
   if (d.length > 180) d = d.slice(0, 170).replace(/\s+\S*$/, '') + '…';
-  if (d.length < 20) d = (d + ' ' + title).trim();
+  if (d.length < 20) d = `${title}: ${d}`;
   return d;
 }
 
@@ -332,6 +358,7 @@ function checkAgainstConfig(arts) {
 function convertArticle(a, entry, existing) {
   const ctx = new Ctx(a.title);
   let body = '', descSource = '', platforms;
+  const allTexts = entry.plat ? Object.values(entry.plat) : [entry.body || ''];
   if (entry.plat) {
     const keys = Object.keys(entry.plat);
     const same = new Set(keys.map((k) => entry.plat[k])).size === 1;
@@ -339,7 +366,8 @@ function convertArticle(a, entry, existing) {
       body = htmlToMdx(entry.plat[keys[0]], ctx);
       descSource = entry.plat[keys[0]];
     } else {
-      const ordered = keys.map((k) => ({ k, key: PLAT_KEYS[k] })).sort((x, y) => PLAT_ORDER.indexOf(x.key) - PLAT_ORDER.indexOf(y.key));
+      // tabs keep the order of the prototype (e.g. Upload audio: iPhone, Mac, Android, Windows)
+      const ordered = keys.map((k) => ({ k, key: PLAT_KEYS[k] }));
       body = '<PlatformTabs>\n' + ordered.map(({ k, key }) => `<Platform name="${key}">\n\n${htmlToMdx(entry.plat[k], ctx)}\n\n</Platform>`).join('\n') + '\n</PlatformTabs>';
       descSource = entry.plat[ordered[0].k];
     }
@@ -355,16 +383,49 @@ function convertArticle(a, entry, existing) {
   const keptRelated = related.filter((s) => existing.has(s));
   const droppedRelated = related.filter((s) => !existing.has(s));
 
-  const fm = ['---', `title: ${yamlStr(a.title)}`, `description: ${yamlStr(makeDescription(firstParagraphText(descSource), a.title))}`, `category: ${a.category}`];
-  if (a.group) fm.push(`group: ${a.group}`);
-  fm.push(`order: ${a.order}`);
-  if (platforms) fm.push(`platforms: [${platforms.join(', ')}]`);
-  fm.push(`related: [${keptRelated.join(', ')}]`);
-  fm.push(`updated: ${DATE}`);
-  if (a.hidden) fm.push('hidden: true');
-  fm.push('aliases: []', '---');
-  const text = fm.join('\n') + '\n\n' + body.replace(/\n{3,}/g, '\n\n').trim() + '\n';
-  return { text, ctx, droppedRelated };
+  const fm = [['title', yamlStr(a.title)], ['description', yamlStr(makeDescription(firstParagraphText(descSource, ...allTexts), a.title))], ['category', a.category]];
+  if (a.group) fm.push(['group', a.group]);
+  fm.push(['order', String(a.order)]);
+  if (platforms) fm.push(['platforms', `[${platforms.join(', ')}]`]);
+  fm.push(['related', `[${keptRelated.join(', ')}]`]);
+  fm.push(['updated', DATE]);
+  if (a.hidden) fm.push(['hidden', 'true']);
+  fm.push(['aliases', '[]']);
+  body = body.replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  return { fm, body, ctx, droppedRelated };
+}
+
+const fmText = (fm) => ['---', ...fm.map(([k, v]) => `${k}: ${v}`), '---'].join('\n');
+
+/** Split an existing .mdx file into its frontmatter lines ([key, raw value]) and body. */
+function readExisting(file) {
+  const src = fs.readFileSync(file, 'utf8');
+  const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!m) return null;
+  const fm = [];
+  for (const line of m[1].split(/\r?\n/)) {
+    const kv = line.match(/^([A-Za-z][\w-]*):\s?(.*)$/);
+    if (kv) fm.push([kv[1], kv[2]]);
+    else if (fm.length) fm[fm.length - 1][1] += '\n' + line; // multi-line value: keep as is
+  }
+  return { fm, body: m[2].replace(/^\s+/, '').replace(/\s*$/, '\n') };
+}
+
+/**
+ * --update: new text + fresh `related` from the prototype; every other field that is already
+ * in the file stays exactly as it is (hand edits such as aliases or a rewritten description survive).
+ */
+const REFRESH = new Set(['related']);
+function mergeFrontmatter(fresh, old, bodyChanged) {
+  const oldMap = new Map(old.fm);
+  const out = fresh.map(([k, v]) => {
+    if (k === 'updated') return [k, bodyChanged || !oldMap.has(k) ? v : oldMap.get(k)];
+    if (REFRESH.has(k) || !oldMap.has(k)) return [k, v];
+    return [k, oldMap.get(k)];
+  });
+  const freshKeys = new Set(fresh.map(([k]) => k));
+  for (const [k, v] of old.fm) if (!freshKeys.has(k)) out.push([k, v]); // e.g. draft: true added by hand
+  return out;
 }
 
 // ---------- FAQ ----------
@@ -422,11 +483,24 @@ for (const a of chosen) {
   const entry = data.C[a.title];
   if (!entry) { console.log(`- ${a.slug}: no text in the prototype, skipped`); report.skipped++; continue; }
   const file = path.join(OUT, `${a.slug}.mdx`);
-  if (fs.existsSync(file) && !FORCE) { console.log(`= ${a.slug}.mdx exists (use --force to overwrite)`); report.skipped++; continue; }
-  const { text, ctx, droppedRelated } = convertArticle(a, entry, existing);
+  const exists = fs.existsSync(file);
+  if (exists && !FORCE && !UPDATE) { console.log(`= ${a.slug}.mdx exists (use --update to refresh it and keep hand edits, --force to overwrite)`); report.skipped++; continue; }
+  const { fm, body, ctx, droppedRelated } = convertArticle(a, entry, existing);
+  let text = fmText(fm) + '\n\n' + body;
+  let mark = '+';
+  if (exists && UPDATE && !FORCE) {
+    const old = readExisting(file);
+    if (!old) { console.log(`! ${a.slug}.mdx: could not read the block between the --- lines, skipped`); report.skipped++; continue; }
+    const bodyChanged = old.body !== body;
+    text = fmText(mergeFrontmatter(fm, old, bodyChanged)) + '\n\n' + body;
+    const before = fs.readFileSync(file, 'utf8');
+    if (before === text) { console.log(`= ${a.slug}.mdx unchanged`); report.skipped++; continue; }
+    mark = '~';
+    if (bodyChanged) ctx.warn('text re-generated from the prototype (check the diff if it was edited by hand)');
+  }
   fs.writeFileSync(file, text);
   report.written++;
-  console.log(`+ src/content/articles/${a.slug}.mdx`);
+  console.log(`${mark} src/content/articles/${a.slug}.mdx`);
   ctx.warnings.forEach((w) => console.log(`    ! ${w}`));
   if (droppedRelated.length) console.log(`    ~ related not migrated yet (left out): ${droppedRelated.join(', ')}`);
   ctx.links.forEach((l) => { if (!existing.has(l)) report.pendingLinks.add(l); });

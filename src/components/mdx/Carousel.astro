@@ -1,0 +1,36 @@
+---
+/**
+ * Pictures you can swipe through, one at a time (like on a phone).
+ *   <Carousel label="Mac permissions, step by step">
+ *
+ *   <Figure src="/images/…-1.webp" alt="…" caption="…" />
+ *
+ *   <Figure src="/images/…-2.webp" alt="…" caption="…" />
+ *
+ *   </Carousel>
+ * Never moves by itself. Arrow buttons, swipe, or the keyboard (← →) switch pictures;
+ * a counter "2 / 6" shows where you are.
+ */
+interface Props { label?: string }
+const { label = 'Pictures' } = Astro.props;
+
+let html = await Astro.slots.render('default');
+// every picture inside becomes one slide
+const slides = [...html.matchAll(/<figure class="fig"/g)].length;
+// (if all pictures are still missing — e.g. Dasha's files not added yet — nothing is shown)
+let n = 0;
+html = html.replace(/<figure class="fig"/g, () => {
+  n++;
+  return `<figure class="fig" role="group" aria-roledescription="slide" aria-label="${n} of ${slides}"`;
+});
+---
+{slides > 0 && (
+  <div class="car" data-carousel role="region" aria-roledescription="carousel" aria-label={label}>
+    <button type="button" class="car-btn car-prev" aria-label="Previous picture" aria-disabled="true"><span aria-hidden="true">&#8249;</span></button>
+    <div class="car-track" tabindex="0">
+      <Fragment set:html={html} />
+    </div>
+    <button type="button" class="car-btn car-next" aria-label="Next picture" aria-disabled={slides < 2 ? 'true' : 'false'}><span aria-hidden="true">&#8250;</span></button>
+    <p class="car-count" aria-live="polite" data-pagefind-ignore><span class="sr">Picture </span><span data-car-i>1</span> / {slides}</p>
+  </div>
+)}

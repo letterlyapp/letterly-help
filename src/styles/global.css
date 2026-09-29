@@ -168,6 +168,10 @@
   .body a:hover{color:var(--primary-d);}
   .body b, .body strong{color:var(--ink);}
   .body h2 .eyebrow{display:block; font-size:15px; font-weight:600; letter-spacing:0; color:var(--primary); margin-bottom:6px;}
+  /* <Eyebrow> — the small "Part 1" label above a heading; it takes over the heading's divider line */
+  .body p.eyebrow{font-size:15px; font-weight:600; letter-spacing:0; line-height:1.4; color:var(--primary); margin:44px 0 6px; padding-top:28px; border-top:1px solid var(--line);}
+  .body p.eyebrow:first-child{border-top:0; padding-top:0; margin-top:0;}
+  .body p.eyebrow + h2{margin-top:0; padding-top:0; border-top:0;}
 
   /* Callouts — one quiet style, icon + soft tint */
   .body .callout{position:relative; background:var(--tip-bg); border-radius:14px; padding:16px 20px 16px 54px; margin:22px 0; font-size:17px; line-height:1.6; color:var(--ink);}
@@ -208,6 +212,11 @@
   .body .car-track figure.fig{flex:0 0 100%; scroll-snap-align:center; margin:0;}
   .body .car-btn{position:absolute; top:38%; z-index:2; width:48px; height:48px; border-radius:50%; border:1px solid var(--line2); background:#fff; color:var(--ink); font-size:24px; line-height:1; cursor:pointer; box-shadow:var(--sh-pop);}
   .body .car-prev{left:10px;} .body .car-next{right:10px;}
+  @media (hover: hover){ .body .car-btn:hover{background:var(--psoft);} }
+  .body .car-btn[aria-disabled="true"]{opacity:.35; cursor:default; box-shadow:none; background:#fff;}
+  .body .car-track:focus-visible{outline:3px solid var(--primary); outline-offset:3px; border-radius:12px;}
+  .body .car-count{margin:6px 0 0; text-align:center; font-size:15px; font-weight:600; color:var(--soft); font-variant-numeric:tabular-nums;}
+  @media (prefers-reduced-motion: reduce){ .body .car-track{scroll-behavior:auto;} }
 
   /* Expandable */
   .body details.more{border:1px solid var(--line2); border-radius:14px; padding:0 18px; margin:20px 0; background:var(--paper);}
@@ -217,7 +226,7 @@
   .body details.more[open]>summary::after{transform:rotate(180deg);}
   .body details.more .langs{padding:0 0 16px; font-size:16px; line-height:1.9; color:var(--ink2);}
 
-  /* Placeholders from the content (kept as-is) */
+  /* <Shot> placeholders — only visible in `npm run dev`, never on the live site */
   .body .shot{display:flex; align-items:center; justify-content:center; text-align:center; min-height:150px; background:repeating-linear-gradient(45deg,#f5f1ff,#f5f1ff 11px,#eee7ff 11px,#eee7ff 22px); border:1px dashed var(--line2); border-radius:12px; margin:16px 0; padding:16px;}
   .body .shot span{background:rgba(255,255,255,.85); padding:7px 13px; border-radius:8px; color:var(--soft); font-size:15px; font-weight:600;}
   .body .shots{display:flex; gap:12px; flex-wrap:wrap;}

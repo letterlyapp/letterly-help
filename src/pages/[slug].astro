@@ -37,7 +37,8 @@ const crumbMeta = [cat.title, group?.title].filter(Boolean).join(' › ');
     {data.draft && <span class="draft-badge" data-pagefind-ignore>Draft — not published</span>}
     <span hidden data-pagefind-meta={`crumb:${crumbMeta}`}></span>
     {data.aliases.length > 0 && (
-      <span hidden data-pagefind-weight="5" data-pagefind-index-attrs="data-aliases" data-aliases={data.aliases.join(', ')}></span>
+      <span hidden data-pagefind-weight="5" data-pagefind-index-attrs="data-aliases" data-aliases={data.aliases.join(', ')}
+        data-pagefind-meta={`aliases:${data.aliases.join(', ')}`}></span>
     )}
     <h1 tabindex="-1">{data.title}</h1>
     {works && <WorksOn labels={works} />}

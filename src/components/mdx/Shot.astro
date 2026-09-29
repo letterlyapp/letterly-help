@@ -1,0 +1,13 @@
+---
+/**
+ * Placeholder for a screenshot or video that isn't ready yet.
+ *   <Shot label="Screenshot: Dictation shortcut screen on Mac" />
+ * It is visible only while editing (`npm run dev`) and is NEVER shown on the live site.
+ * Replace it with <Figure …> or <Video …> when the file is ready.
+ */
+interface Props { label?: string }
+const { label } = Astro.props;
+---
+{import.meta.env.DEV && (
+  <div class="shot"><span>{label || 'Screenshot will go here'}</span></div>
+)}

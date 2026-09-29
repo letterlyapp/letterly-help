@@ -80,7 +80,7 @@ $('.skip')?.addEventListener('click', (e) => {
 });
 
 /* ---------- Search (Pagefind; works after `npm run build`) ---------- */
-type PagefindResult = { url: string; excerpt: string; meta: { title?: string; crumb?: string } };
+type PagefindResult = { url: string; excerpt: string; content?: string; meta: { title?: string; crumb?: string; aliases?: string } };
 type Pagefind = {
   init?: () => Promise<void>;
   options?: (o: object) => Promise<void>;
@@ -107,6 +107,33 @@ function hl(s: string, ts: string[]) {
   let out = esc(s);
   ts.forEach((t) => { out = out.replace(new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '\u0001$1\u0002'); });
   return out.replace(/\u0001/g, '<mark>').replace(/\u0002/g, '</mark>');
+}
+
+/**
+ * Short piece of the article around the first search word.
+ * Built from the page text without the search synonyms (aliases) and the title,
+ * so the raw alias list never shows up under a result.
+ */
+function snippet(d: PagefindResult, ts: string[]) {
+  let text = (d.content || '').replace(/\s+/g, ' ');
+  if (d.meta.aliases) text = text.replace(d.meta.aliases, ' ');
+  if (d.meta.title) text = text.replace(d.meta.title, ' ');
+  text = text.replace(/\s+/g, ' ').trim().replace(/^[\s.,;:·—-]+/, '');
+  const low = text.toLowerCase().replace(/[‘’]/g, "'");
+  // exact word first; then its stem ("cancelling" → "cancel"), because search also matches word forms
+  const find = (list: string[]) => {
+    let p = -1;
+    list.forEach((t) => { const i = low.indexOf(t); if (t && i > -1 && (p < 0 || i < p)) p = i; });
+    return p;
+  };
+  let pos = find(ts);
+  if (pos < 0) pos = find(ts.map((t) => t.replace(/(ling|ing|ed|es|s)$/, '')).filter((t) => t.length >= 4));
+  if (pos < 0) return '';
+  let start = Math.max(0, pos - 50);
+  if (start > 0) { const sp = text.indexOf(' ', start); start = sp > -1 && sp < pos ? sp + 1 : start; }
+  let end = Math.min(text.length, start + 150);
+  if (end < text.length) { const sp = text.lastIndexOf(' ', end); if (sp > pos) end = sp; }
+  return (start > 0 ? '…' : '') + hl(text.slice(start, end), ts) + (end < text.length ? '…' : '');
 }
 
 let SEQ = 0;
@@ -154,9 +181,10 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
       const title = d.meta.title || d.url;
       const nt = norm(title);
       const allInTitle = ts.length > 0 && ts.every((t) => nt.includes(t));
+      const ex = allInTitle ? '' : snippet(d, ts);
       return `<li><a role="option" id="${id}-${i}" href="${esc(d.url)}"><span class="rt">${hl(title, ts)}</span>` +
         (d.meta.crumb ? `<span class="rm">${esc(d.meta.crumb)}</span>` : '') +
-        (!allInTitle && d.excerpt ? `<span class="rs">${d.excerpt}</span>` : '') + '</a></li>';
+        (ex ? `<span class="rs">${ex}</span>` : '') + '</a></li>';
     }).join('') + '</ul>');
   }
   input.addEventListener('input', render);
@@ -233,6 +261,46 @@ $$('[data-ptabs]').forEach((wrap) => {
   });
 });
 buildToc();
+
+/* ---------- Carousel: arrows, swipe (native scrolling), ← → keys, counter. Never moves by itself. ---------- */
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+$$('[data-carousel]').forEach((car) => {
+  const track = $('.car-track', car)!;
+  const slides = $$(':scope > figure', track);
+  const prev = $('.car-prev', car)!;
+  const next = $('.car-next', car)!;
+  const num = $('[data-car-i]', car);
+  if (!slides.length) return;
+  const left = (i: number) => slides[i].offsetLeft - slides[0].offsetLeft;
+  let idx = 0;
+  function current() {
+    let best = 0;
+    slides.forEach((_, i) => { if (Math.abs(left(i) - track.scrollLeft) < Math.abs(left(best) - track.scrollLeft)) best = i; });
+    return best;
+  }
+  function update() {
+    const i = current();
+    prev.setAttribute('aria-disabled', String(i === 0));
+    next.setAttribute('aria-disabled', String(i === slides.length - 1));
+    if (i === idx && num?.textContent === String(i + 1)) return;
+    idx = i;
+    if (num) num.textContent = String(i + 1);
+  }
+  function go(i: number) {
+    const n = Math.max(0, Math.min(slides.length - 1, i));
+    track.scrollTo({ left: left(n), behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  prev.addEventListener('click', () => { if (prev.getAttribute('aria-disabled') !== 'true') go(current() - 1); });
+  next.addEventListener('click', () => { if (next.getAttribute('aria-disabled') !== 'true') go(current() + 1); });
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current() + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(current() - 1); }
+  });
+  let raf = 0;
+  track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+});
 
 /* ---------- Was this helpful? ---------- */
 $$('.helpful').forEach((box) => {

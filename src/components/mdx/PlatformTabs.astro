@@ -9,9 +9,9 @@
  *   …text for Mac…
  *   </Platform>
  *   </PlatformTabs>
- * The reader's platform is chosen automatically and remembered.
+ * Tabs appear in the order written. The reader's platform is chosen automatically and remembered.
  */
-import { PLATFORM_LABELS, PLATFORMS, type PlatformKey } from '../../lib/platforms';
+import { PLATFORM_LABELS, type PlatformKey } from '../../lib/platforms';
 
 let html = await Astro.slots.render('default');
 // (in `npm run dev` Astro adds extra data-astro-* attributes, hence the ([^>]*))
@@ -23,10 +23,7 @@ if (keys.length < 2) {
 if (new Set(keys).size !== keys.length) {
   throw new Error(`<PlatformTabs> has the same platform twice: ${keys.join(', ')}`);
 }
-const ordered = [...keys].sort((a, b) => PLATFORMS.indexOf(a) - PLATFORMS.indexOf(b));
-if (ordered.join() !== keys.join()) {
-  throw new Error(`<PlatformTabs>: put the platforms in this order: ${ordered.join(', ')}`);
-}
+// The tabs appear in the order they are written in the article.
 const g = globalThis as { __lhTabsSeq?: number };
 g.__lhTabsSeq = (g.__lhTabsSeq ?? 0) + 1;
 const uid = 'pt' + g.__lhTabsSeq;
