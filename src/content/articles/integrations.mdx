@@ -1,0 +1,77 @@
+---
+title: "Integrations"
+description: "Integrations send a finished note out of Letterly automatically — into Google Docs, Notion, your CRM, or anywhere else you keep things."
+category: using-letterly
+group: ai-and-integrations
+order: 2
+related: [letterly-mcp, export-notes, share]
+updated: 2026-09-29
+aliases: []
+---
+
+**Integrations** send a finished note out of Letterly automatically — into Google Docs, Notion, your CRM, or anywhere else you keep things. Set them up in **Settings → Integrations**, then run them from the **Actions** button inside a note.
+
+There are two ways to connect: **Zapier** for ready-made apps, and **webhooks** if you have your own endpoint.
+
+## Zapier
+
+Zapier links Letterly to thousands of apps without any code. A Zap has two parts: a **trigger** that receives the note from Letterly, and an **action** that puts it where you need it.
+
+### Find your API key
+
+The API key tells Zapier which account to take your text from. Find it in either place:
+
+- Open [web.letterly.app/settings/actions/zapier](https://web.letterly.app/settings/actions/zapier) and sign in if you are asked to.
+- Or, in the app, go to **Settings → Integrations → Zapier** and tap **Next** a few times.
+
+### Build the Zap
+
+<Steps>
+
+1. In [Zapier](https://zapier.com/app), click **Create → Zaps**.
+2. For the **trigger**, search for **Letterly** and choose the event **Letterly Actions**. Sign in with your API key, name the trigger, then test it.
+3. For the **action**, pick the app you want — for example **Google Docs → Append text to a document** — and connect your account.
+4. Choose which parts of the note to send, then test the step and publish the Zap.
+
+</Steps>
+
+### What you can send
+
+| Field | What it contains |
+| --- | --- |
+| `title` | The note title |
+| `rewrite_text` | The final rewritten text |
+| `original` | The original transcript |
+| `tags` | Tags from the note |
+| `created_at` | When the note was created |
+| `rewrite_created_at` | When the rewrite was first made |
+| `rewrite_updated_at` | When the rewrite was last updated |
+| `updated_at` | When the note was last updated |
+
+<Callout type="tip">
+
+Step-by-step, with videos: [How to send your voice notes to Google Docs using Zapier](https://letterly.app/blog/how-to-send-your-voice-notes-to-google-docs-using-zapier/).
+
+</Callout>
+
+## Webhooks
+
+If you have your own endpoint, a webhook sends the note straight to it — no third-party service in between. Set one up in **Settings → Integrations**, add your URL, and run it from the **Actions** button like any other integration.
+
+<Callout type="note">
+
+Webhooks are the more technical option — you need somewhere to receive the request. If you are not sure, use Zapier instead.
+
+</Callout>
+
+## Use an integration
+
+<Steps>
+
+1. Open any note.
+2. Tap **Actions**.
+3. Choose the integration you set up.
+
+</Steps>
+
+Need something that is not there? Write to [hi@letterly.app](mailto:hi@letterly.app) and tell us what you are trying to connect.
