@@ -5,7 +5,7 @@ For every article and every platform tab:
   - body text (all whitespace ignored), after removing the expected differences:
       * v7 "Related articles" block (on our site it sits below the body) -> compared separately as a list
       * v7 placeholder boxes (figure.shot) -> not shown on our site
-      * captions of pictures/videos from help-center-images/ (Dasha's files, not in the repo yet)
+      * captions of pictures/videos from help-center-images/ (files not in the repo yet)
       * our carousel counter ("Picture 1 / 6")
 Needs Python Playwright with Chromium (not an npm dependency of the site). Usage:
   npm run build

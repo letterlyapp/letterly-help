@@ -1,0 +1,8 @@
+# Maintainers: GitHub logins (one per line) who may change any file in this repo.
+# Repo admins (for example, admins of the letterlyapp organization) may also change any file.
+# Everyone else may only change src/content/, src/data/faq/, public/images/ and public/video/
+# (checked by .github/workflows/content-guard.yml).
+# The list is read from the main branch, so a change here takes effect only after it is merged to main.
+romanoganesyan
+turtlecrab
+kbkmn

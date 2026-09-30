@@ -17,7 +17,7 @@ const { label = 'Pictures' } = Astro.props;
 let html = await Astro.slots.render('default');
 // every picture inside becomes one slide
 const slides = [...html.matchAll(/<figure class="fig"/g)].length;
-// (if all pictures are still missing — e.g. Dasha's files not added yet — nothing is shown)
+// (if all pictures are still missing — e.g. files not added yet — nothing is shown)
 let n = 0;
 html = html.replace(/<figure class="fig"/g, () => {
   n++;

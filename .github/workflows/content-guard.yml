@@ -1,0 +1,60 @@
+# Content guard: people who are not maintainers may only change articles, FAQ, pictures and videos.
+# Maintainers are listed in .github/maintainers.txt; repo admins are always allowed.
+#
+# Why pull_request_target: the workflow and the maintainers list are taken from the main branch,
+# not from the PR, so a PR cannot switch the guard off or add its author to the list.
+# The PR's code is never checked out or run here — we only read the list of changed files via the GitHub API.
+name: Content guard
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # main branch, not the PR
+        with:
+          sparse-checkout: .github
+      - name: Check which files the PR changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          author=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
+          if [ -n "$author" ] && sed 's/#.*//' .github/maintainers.txt | tr -d ' \t\r' | tr '[:upper:]' '[:lower:]' | grep -xF "$author" > /dev/null; then
+            echo "$AUTHOR is a maintainer — any file may be changed."
+            exit 0
+          fi
+
+          # repo admins (e.g. organization admins) may change anything too
+          perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission 2>/dev/null || echo none)
+          if [ "$perm" = "admin" ]; then
+            echo "$AUTHOR is a repo admin — any file may be changed."
+            exit 0
+          fi
+
+          # every changed path; for renamed files both the old and the new name
+          gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' | sort -u > changed.txt
+
+          allowed='^(src/content/|src/data/faq/|public/images/|public/video/)'
+          grep -Ev "$allowed" changed.txt > outside.txt || true
+
+          if [ -s outside.txt ]; then
+            echo "::error::This pull request changes files outside the help articles, FAQ, pictures and videos."
+            echo "Only a maintainer can change these files:"
+            sed 's/^/  - /' outside.txt
+            echo ""
+            echo "You can change: src/content/ (articles), src/data/faq/ (FAQ on the home page), public/images/ (pictures), public/video/ (videos)."
+            echo "Please remove the other changes from this pull request, or ask Roman to make them."
+            exit 1
+          fi
+          echo "OK: only articles, FAQ, pictures or videos are changed ($(wc -l < changed.txt) files)."
