@@ -25,6 +25,20 @@ SEO is automatic: every page gets a canonical URL, Open Graph/Twitter tags with 
 (JSON-LD); `sitemap-index.xml` lists the home page, categories and every article except `draft` and `hidden` ones
 (their `updated` date is the sitemap `lastmod`); `draft` and `hidden` articles get `noindex, follow`.
 
+## Analytics
+
+Vercel Web Analytics (no cookies, no banner) counts page views on the live site only — previews and localhost
+send nothing. Data: Vercel → project `letterly-help` → **Analytics** (custom events at the bottom, under **Events**).
+Custom events (code: `src/scripts/analytics.ts`; do not rename them or their fields, old data would split):
+
+| Event | Fields | When |
+|---|---|---|
+| `helpful` | `article` (slug), `answer` (`yes`/`no`) | A reader clicks **Yes** or **No** under "Was this helpful?" (once per page view). |
+| `search_no_results` | `query` (lowercase, up to 60 characters) | A search shows "No results" and the reader stops typing for 1.5 s or presses Enter (once per query per page view). |
+
+Because `article` is the file name, renaming an article file splits its history — one more reason never to rename.
+Frequent `search_no_results` queries are words to add as `aliases` or topics for new articles.
+
 ## Who may change what
 
 Checks on every pull request (both are required to merge into `main`):
@@ -34,7 +48,7 @@ Checks on every pull request (both are required to merge into `main`):
   `src/content/**` (articles), `src/data/faq/**` (home page FAQ), `public/images/**`, `public/video/**`.
 
 Content editors must never change anything else: `.github/`, `src/components/`, `src/pages/`, `src/layouts/`,
-`src/lib/`, `src/styles/`, `src/data/categories.ts`, `src/data/site.ts`, `scripts/`, `astro.config.mjs`,
+`src/lib/`, `src/scripts/`, `src/styles/`, `src/data/categories.ts`, `src/data/site.ts`, `scripts/`, `astro.config.mjs`,
 `package*.json`, `tsconfig.json`, this file, `CLAUDE.md`, `README.md`. New sections, components or design
 changes are requests for a maintainer (Roman).
 
