@@ -66,28 +66,6 @@
       ],
       "destination": "https://help.letterly.app/:path",
       "statusCode": 301
-    },
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "letterly-help-git-seo-alias-root-redirect-letterly.vercel.app"
-        }
-      ],
-      "destination": "https://help.letterly.app/",
-      "statusCode": 301
-    },
-    {
-      "source": "/:path(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "letterly-help-git-seo-alias-root-redirect-letterly.vercel.app"
-        }
-      ],
-      "destination": "https://help.letterly.app/:path",
-      "statusCode": 301
     }
   ]
 }
