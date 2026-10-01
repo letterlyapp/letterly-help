@@ -2,36 +2,36 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/:path(.*)",
       "has": [
         {
           "type": "host",
           "value": "letterly-help.vercel.app"
         }
       ],
-      "destination": "https://help.letterly.app/:path*",
+      "destination": "https://help.letterly.app/:path",
       "statusCode": 301
     },
     {
-      "source": "/:path*",
+      "source": "/:path(.*)",
       "has": [
         {
           "type": "host",
           "value": "letterly-help-letterly.vercel.app"
         }
       ],
-      "destination": "https://help.letterly.app/:path*",
+      "destination": "https://help.letterly.app/:path",
       "statusCode": 301
     },
     {
-      "source": "/:path*",
+      "source": "/:path(.*)",
       "has": [
         {
           "type": "host",
           "value": "letterly-help-git-main-letterly.vercel.app"
         }
       ],
-      "destination": "https://help.letterly.app/:path*",
+      "destination": "https://help.letterly.app/:path",
       "statusCode": 301
     }
   ]
