@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist && node scripts/check-links.mjs --strict",
+    "build": "astro build && pagefind --site dist && node scripts/check-links.mjs --strict && node scripts/check-descriptions.mjs",
     "preview": "astro preview",
     "check": "astro check && npm run build",
     "convert": "node scripts/convert.mjs"
@@ -17,6 +17,7 @@
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.2",
     "@astrojs/mdx": "^8.0.2",
+    "@astrojs/sitemap": "^3.7.4",
     "@fontsource/onest": "^5.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",

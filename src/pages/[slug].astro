@@ -6,8 +6,9 @@ import WorksOn from '../components/WorksOn.astro';
 import Related from '../components/Related.astro';
 import Helpful from '../components/Helpful.astro';
 import { mdxComponents } from '../components/mdx';
-import { getArticles, categoryUrl, worksOn, type Article } from '../lib/articles';
+import { getArticles, articleUrl, categoryUrl, worksOn, type Article } from '../lib/articles';
 import { getCategory } from '../data/categories';
+import { articleLd, breadcrumbList } from '../lib/seo';
 
 export async function getStaticPaths() {
   const articles = await getArticles();
@@ -29,9 +30,14 @@ const crumbs = [
   { label: cat.title, href: categoryUrl(cat.slug) },
   ...(group ? [{ label: group.title, href: categoryUrl(cat.slug, group.slug) }] : []),
 ];
+const url = articleUrl(article.id);
+const jsonLd = [
+  articleLd({ title: data.title, description: data.description, updated: data.updated, url }),
+  breadcrumbList(crumbs, { label: data.title, href: url }),
+];
 const crumbMeta = [cat.title, group?.title].filter(Boolean).join(' › ');
 ---
-<Base title={data.title} description={data.description} category={cat.slug} active={article.id} noindex={data.draft}>
+<Base title={data.title} description={data.description} category={cat.slug} active={article.id} noindex={data.draft || data.hidden} jsonLd={jsonLd}>
   <article data-pagefind-body>
     <Breadcrumbs items={crumbs} />
     {data.draft && <span class="draft-badge" data-pagefind-ignore>Draft — not published</span>}

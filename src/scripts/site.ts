@@ -203,6 +203,18 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
 const topBox = $('.top-search');
 const topSearch = topBox ? initSearch(topBox, () => header.classList.remove('searching')) : null;
 $$('.hero-search').forEach((b) => initSearch(b));
+/* ?q=… in the address (e.g. from a Google search box) opens the search with that query */
+const urlQuery = new URLSearchParams(location.search).get('q')?.trim();
+if (urlQuery) {
+  const box = $('.hero-search') ?? topBox;
+  const qInput = box ? $<HTMLInputElement>('input', box) : null;
+  if (qInput) {
+    if (box === topBox) header.classList.add('searching');
+    qInput.value = urlQuery;
+    qInput.focus();
+    qInput.dispatchEvent(new Event('input'));
+  }
+}
 $('#searchBtn')?.addEventListener('click', () => { header.classList.add('searching'); topSearch?.input.focus(); });
 $('#searchClose')?.addEventListener('click', () => {
   header.classList.remove('searching');
