@@ -1,5 +1,6 @@
 /* Client-side behaviour, ported from the v7 prototype:
    drawer menu, menu groups, search (Pagefind), platform tabs, table of contents, "Was this helpful?", FAQ. */
+import { trackHelpful, trackNoResults } from './analytics';
 
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T | null;
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => Array.from(r.querySelectorAll(s)) as T[];
@@ -145,6 +146,10 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
   let items: HTMLAnchorElement[] = [];
   let curIdx = -1;
   let run = 0;
+  /* analytics: the query that last showed "No results"; reported after 1.5 s without typing or on Enter */
+  let emptyQ = '';
+  let emptyTimer = 0;
+  const reportEmpty = () => { clearTimeout(emptyTimer); if (emptyQ && emptyQ === input.value.trim()) trackNoResults(emptyQ); };
   function close() { panel.classList.remove('on'); input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); curIdx = -1; }
   function mark(n: number) {
     items.forEach((a, i) => { a.classList.toggle('hl', i === n); a.setAttribute('aria-selected', String(i === n)); });
@@ -161,6 +166,8 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
     const q = input.value.trim();
     clear.classList.toggle('on', !!input.value);
     const my = ++run;
+    emptyQ = '';
+    clearTimeout(emptyTimer);
     if (q.length < 2) { close(); return; }
     const pf = await loadPagefind();
     if (my !== run) return;
@@ -173,6 +180,8 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
     const data = await Promise.all(res.results.slice(0, 8).map((r) => r.data()));
     if (my !== run) return;
     if (!data.length) {
+      emptyQ = q;
+      emptyTimer = window.setTimeout(reportEmpty, 1500);
       show(`<div class="empty" role="status"><p>No results for “${esc(q)}”.</p><a href="mailto:${esc(document.querySelector<HTMLElement>('[data-email]')?.dataset.email || 'hi@letterly.app')}">${MAIL}Contact us</a></div>`);
       return;
     }
@@ -192,7 +201,7 @@ function initSearch(box: HTMLElement, onDone?: () => void) {
   input.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); mark(Math.min(items.length - 1, curIdx + 1)); }
     else if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); mark(Math.max(-1, curIdx - 1)); }
-    else if (e.key === 'Enter') { e.preventDefault(); const a = items[curIdx > -1 ? curIdx : 0]; if (a) location.href = a.href; }
+    else if (e.key === 'Enter') { e.preventDefault(); reportEmpty(); const a = items[curIdx > -1 ? curIdx : 0]; if (a) location.href = a.href; }
     else if (e.key === 'Escape') { if (panel.classList.contains('on')) close(); else onDone?.(); }
   });
   panel.addEventListener('mousedown', (e) => { if ((e.target as Element).closest('a')) e.preventDefault(); });
@@ -322,6 +331,7 @@ $$('.helpful').forEach((box) => {
     const tpl = $<HTMLTemplateElement>(b.dataset.v === 'yes' ? '#hf-yes' : '#hf-no', box);
     const btns = $('.btns', box);
     if (!tpl || !btns) return;
+    trackHelpful(b.dataset.v === 'yes' ? 'yes' : 'no'); // once per page view: the buttons are removed below
     btns.replaceWith(tpl.content.cloneNode(true));
     $('.thanks', box)?.focus({ preventScroll: true });
   });
