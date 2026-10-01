@@ -6,6 +6,7 @@ import CategoryIcon from '../components/CategoryIcon.astro';
 import Icon from '../components/Icon.astro';
 import { getArticles, getNav, articleUrl, categoryUrl } from '../lib/articles';
 import { popular, site } from '../data/site';
+import { faqLd, organization, websiteLd } from '../lib/seo';
 
 const nav = await getNav();
 const ids = new Set((await getArticles()).map((a) => a.id));
@@ -16,8 +17,13 @@ if (missing.length) {
 const chips = popular;
 const faqEntries = (await getCollection('faq')).sort((a, b) => a.data.order - b.data.order);
 const faq = await Promise.all(faqEntries.map(async (e) => ({ q: e.data.question, id: e.id, Content: (await render(e)).Content })));
+const faqHtml = faqEntries.map((e) => {
+  if (!e.rendered?.html) throw new Error(`src/data/faq/${e.id}.md: the answer is empty`);
+  return { q: e.data.question, html: e.rendered.html };
+});
+const jsonLd = [websiteLd, organization, faqLd(faqHtml)];
 ---
-<Base home>
+<Base home jsonLd={jsonLd}>
   <section class="hero">
     <div class="hero-inner">
       <h1 tabindex="-1">How can we <span class="grad">help</span>?</h1>

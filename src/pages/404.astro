@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 ---
-<Base title="Page not found" noindex>
+<Base title="Page not found" noindex canonical={false}>
   <Breadcrumbs items={[{ label: 'Help center', href: '/' }]} />
   <div class="nf">
     <h1 tabindex="-1">Page not found</h1>

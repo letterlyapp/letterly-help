@@ -1,7 +1,11 @@
 /** Site-wide settings. */
 export const site = {
   name: 'Letterly Help Center',
-  description: 'Answers, guides and troubleshooting for Letterly.',
+  description:
+    'Help Center for Letterly, the voice-to-text and dictation app: setup guides, answers about plans and billing, and troubleshooting.',
+  url: 'https://help.letterly.app',
+  logo: 'https://help.letterly.app/images/logo/logo-dark.webp',
+  ogImage: 'https://help.letterly.app/og.png',
   email: 'hi@letterly.app',
   appUrl: 'https://web.letterly.app',
 };

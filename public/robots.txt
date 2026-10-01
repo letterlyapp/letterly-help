@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://help.letterly.app/sitemap-index.xml

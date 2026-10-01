@@ -19,6 +19,11 @@ npm run dev     # local site on http://localhost:4321 (search does not work in d
 a `related` entry that is not an existing article, an unknown component or callout type,
 a picture or video that does not exist (except pending files in `public/images/help-center/`, see below),
 and a broken internal link.
+It also prints a **warning** (does not fail) listing article descriptions that break the description rule below.
+
+SEO is automatic: every page gets a canonical URL, Open Graph/Twitter tags with `/og.png`, and structured data
+(JSON-LD); `sitemap-index.xml` lists the home page, categories and every article except `draft` and `hidden` ones
+(their `updated` date is the sitemap `lastmod`); `draft` and `hidden` articles get `noindex, follow`.
 
 ## Who may change what
 
@@ -80,7 +85,7 @@ Merging combines several existing notes into one.
 | Field | Required | Rules |
 |---|---|---|
 | `title` | yes | 3–120 characters. Sentence case ("Set up Dictation"). Questions are fine ("Can I get a refund?"). |
-| `description` | yes | 20–200 characters, one or two full sentences. Shown in search results and category lists. Usually the first sentence of the answer. Never end with a colon. |
+| `description` | yes | Aim for **70–160 characters**: a complete sentence that says what the article helps with (Google shows it under the title in search results; it is also used in link previews and our search). Never end with a colon. The build accepts 20–200 characters but prints a warning for descriptions shorter than 70, longer than 160 or ending with ":" (see `node scripts/check-descriptions.mjs`). |
 | `category` | yes | A `slug` from `src/data/categories.ts`: `getting-started`, `using-letterly`, `billing-and-subscription`, `troubleshooting`, `privacy-and-security`, `more` (the file is the source of truth). |
 | `group` | depends | Required when the category has groups, forbidden when it has none (`privacy-and-security`, `more`). Must be a group `slug` of that category. |
 | `order` | yes | Integer ≥ 0, position inside the group (or category without groups). New article: largest `order` in that group + 1. |

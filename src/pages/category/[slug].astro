@@ -3,7 +3,8 @@ import Base from '../../layouts/Base.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CategoryIcon from '../../components/CategoryIcon.astro';
 import Icon from '../../components/Icon.astro';
-import { getNav, articleUrl, type NavCategory } from '../../lib/articles';
+import { getNav, articleUrl, categoryUrl, type NavCategory } from '../../lib/articles';
+import { breadcrumbList } from '../../lib/seo';
 
 export async function getStaticPaths() {
   const nav = await getNav();
@@ -11,9 +12,11 @@ export async function getStaticPaths() {
 }
 interface Props { category: NavCategory }
 const { category: cat } = Astro.props;
+const crumbs = [{ label: 'Help center', href: '/' }];
+const jsonLd = breadcrumbList(crumbs, { label: cat.title, href: categoryUrl(cat.slug) });
 ---
-<Base title={cat.title} description={`${cat.title}: ${cat.description}.`} category={cat.slug}>
-  <Breadcrumbs items={[{ label: 'Help center', href: '/' }]} />
+<Base title={cat.title} description={`${cat.title}: ${cat.description}.`} category={cat.slug} jsonLd={jsonLd}>
+  <Breadcrumbs items={crumbs} />
   <div class="cat-top"><CategoryIcon category={cat} /><h1 tabindex="-1">{cat.title}</h1></div>
   <p class="lead">{cat.description}</p>
   {cat.count === 0 && <p class="empty-cat">Articles for this topic are on their way.</p>}
