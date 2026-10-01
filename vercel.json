@@ -2,6 +2,17 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "letterly-help.vercel.app"
+        }
+      ],
+      "destination": "https://help.letterly.app/",
+      "statusCode": 301
+    },
+    {
       "source": "/:path(.*)",
       "has": [
         {
@@ -10,6 +21,17 @@
         }
       ],
       "destination": "https://help.letterly.app/:path",
+      "statusCode": 301
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "letterly-help-letterly.vercel.app"
+        }
+      ],
+      "destination": "https://help.letterly.app/",
       "statusCode": 301
     },
     {
@@ -24,11 +46,44 @@
       "statusCode": 301
     },
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "letterly-help-git-main-letterly.vercel.app"
+        }
+      ],
+      "destination": "https://help.letterly.app/",
+      "statusCode": 301
+    },
+    {
       "source": "/:path(.*)",
       "has": [
         {
           "type": "host",
           "value": "letterly-help-git-main-letterly.vercel.app"
+        }
+      ],
+      "destination": "https://help.letterly.app/:path",
+      "statusCode": 301
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "letterly-help-git-seo-alias-root-redirect-letterly.vercel.app"
+        }
+      ],
+      "destination": "https://help.letterly.app/",
+      "statusCode": 301
+    },
+    {
+      "source": "/:path(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "letterly-help-git-seo-alias-root-redirect-letterly.vercel.app"
         }
       ],
       "destination": "https://help.letterly.app/:path",
